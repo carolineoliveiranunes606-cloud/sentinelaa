@@ -1,4 +1,4 @@
-api/indexconst express = require("express");
+const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir os arquivos do frontend
+// Servir arquivos do frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 // =====================================================
@@ -50,7 +50,7 @@ function readDB() {
 
     const db = JSON.parse(conteudo);
 
-    // Garante que todas as propriedades existam
+    // Garantir estrutura do banco
     if (!Array.isArray(db.usuarios)) {
       db.usuarios = [];
     }
@@ -105,7 +105,7 @@ function writeDB(data) {
 // =====================================================
 
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     status: "online",
     sistema: "Sentineela",
     mensagem: "API Sentineela funcionando corretamente"
@@ -133,9 +133,10 @@ app.post("/login", (req, res) => {
     const usuario = req.body.usuario;
     const senha = req.body.senha;
 
-    const user = db.usuarios.find((u) =>
-      u.usuario === usuario &&
-      u.senha === senha
+    const user = db.usuarios.find(
+      (u) =>
+        u.usuario === usuario &&
+        u.senha === senha
     );
 
     if (!user) {
@@ -144,12 +145,12 @@ app.post("/login", (req, res) => {
       });
     }
 
-    res.json(user);
+    return res.status(200).json(user);
 
   } catch (erro) {
     console.error("Erro no login:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro interno no servidor"
     });
   }
@@ -176,12 +177,12 @@ app.post("/atendimento", (req, res) => {
 
     writeDB(db);
 
-    res.status(201).json(paciente);
+    return res.status(201).json(paciente);
 
   } catch (erro) {
     console.error("Erro ao cadastrar paciente:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao cadastrar paciente"
     });
   }
@@ -195,12 +196,12 @@ app.get("/pacientes", (req, res) => {
   try {
     const db = readDB();
 
-    res.json(db.pacientes);
+    return res.status(200).json(db.pacientes);
 
   } catch (erro) {
     console.error("Erro ao listar pacientes:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao listar pacientes"
     });
   }
@@ -216,9 +217,9 @@ app.post("/triagem", (req, res) => {
 
     const temperatura = Number(req.body.temperatura);
 
-    let risco = req.body.risco;
+    let risco = req.body.risco || "";
 
-    if (!isNaN(temperatura)) {
+    if (!Number.isNaN(temperatura)) {
       if (temperatura >= 39) {
         risco = "vermelho";
       } else if (temperatura >= 38) {
@@ -237,7 +238,7 @@ app.post("/triagem", (req, res) => {
       temperatura: req.body.temperatura || "",
       alergia: req.body.alergia || "",
       observacao: req.body.observacao || "",
-      risco: risco,
+      risco,
       status: "aguardando_medico",
       createdAt: new Date().toISOString()
     };
@@ -246,12 +247,12 @@ app.post("/triagem", (req, res) => {
 
     writeDB(db);
 
-    res.status(201).json(triagem);
+    return res.status(201).json(triagem);
 
   } catch (erro) {
     console.error("Erro ao salvar triagem:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao salvar triagem"
     });
   }
@@ -265,12 +266,12 @@ app.get("/triagens", (req, res) => {
   try {
     const db = readDB();
 
-    res.json(db.triagens);
+    return res.status(200).json(db.triagens);
 
   } catch (erro) {
     console.error("Erro ao listar triagens:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao listar triagens"
     });
   }
@@ -299,19 +300,19 @@ app.post("/tv/chamar", (req, res) => {
 
     db.tv_historico.unshift(chamada);
 
-    // Mantém somente as últimas 5 chamadas
+    // Manter somente as últimas 5 chamadas
     if (db.tv_historico.length > 5) {
       db.tv_historico = db.tv_historico.slice(0, 5);
     }
 
     writeDB(db);
 
-    res.json(chamada);
+    return res.status(200).json(chamada);
 
   } catch (erro) {
     console.error("Erro ao chamar paciente:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao realizar chamada"
     });
   }
@@ -325,7 +326,7 @@ app.get("/tv/chamada", (req, res) => {
   try {
     const db = readDB();
 
-    res.json({
+    return res.status(200).json({
       chamada: db.tv_chamada,
       historico: db.tv_historico
     });
@@ -333,14 +334,14 @@ app.get("/tv/chamada", (req, res) => {
   } catch (erro) {
     console.error("Erro ao consultar TV:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao consultar chamada"
     });
   }
 });
 
 // =====================================================
-// TV - LIMPAR CHAMADA ATUAL
+// TV - LIMPAR CHAMADA
 // =====================================================
 
 app.delete("/tv/chamada", (req, res) => {
@@ -351,14 +352,14 @@ app.delete("/tv/chamada", (req, res) => {
 
     writeDB(db);
 
-    res.json({
+    return res.status(200).json({
       sucesso: true
     });
 
   } catch (erro) {
     console.error("Erro ao limpar chamada:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao limpar chamada"
     });
   }
@@ -369,7 +370,7 @@ app.delete("/tv/chamada", (req, res) => {
 // =====================================================
 
 app.get("/lista-medicacoes", (req, res) => {
-  res.json([
+  return res.status(200).json([
     "Dipirona",
     "Paracetamol",
     "Ibuprofeno",
@@ -384,7 +385,7 @@ app.get("/lista-medicacoes", (req, res) => {
 });
 
 // =====================================================
-// CONSULTA MÉDICA
+// CONSULTA MÉDICA - SALVAR
 // =====================================================
 
 app.post("/consulta", (req, res) => {
@@ -404,34 +405,76 @@ app.post("/consulta", (req, res) => {
 
     writeDB(db);
 
-    res.status(201).json(consulta);
+    return res.status(201).json(consulta);
 
   } catch (erro) {
     console.error("Erro ao salvar consulta:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao salvar consulta"
     });
   }
 });
 
 // =====================================================
-// LISTAR CONSULTAS
+// CONSULTAS - LISTAR
+// =====================================================
+
+app.get("/consultas", (req, res) => {
+  try {
+    const db = readDB();
+
+    return res.status(200).json(db.consultas);
+
+  } catch (erro) {
+    console.error("Erro ao listar consultas:", erro);
+
+    return res.status(500).json({
+      erro: "Erro ao listar consultas"
+    });
+  }
+});
+
+// =====================================================
+// COMPATIBILIDADE COM ROTA ANTIGA
 // =====================================================
 
 app.get("/medicacoes", (req, res) => {
   try {
     const db = readDB();
 
-    res.json(db.consultas);
+    return res.status(200).json(db.consultas);
 
   } catch (erro) {
     console.error("Erro ao listar consultas:", erro);
 
-    res.status(500).json({
+    return res.status(500).json({
       erro: "Erro ao listar consultas"
     });
   }
+});
+
+// =====================================================
+// ROTA 404
+// =====================================================
+
+app.use((req, res) => {
+  return res.status(404).json({
+    erro: "Rota não encontrada",
+    rota: req.originalUrl
+  });
+});
+
+// =====================================================
+// TRATAMENTO DE ERROS
+// =====================================================
+
+app.use((erro, req, res, next) => {
+  console.error("Erro interno:", erro);
+
+  return res.status(500).json({
+    erro: "Erro interno no servidor"
+  });
 });
 
 // =====================================================

@@ -65,17 +65,9 @@ function carregar() {
             <button onclick="selecionar(${index})">
               Atender
             </button>
-
-            <button onclick="darAlta(${index})">
-              🏠 Dar Alta
-            </button>
           </div>
         `;
       });
-    })
-    .catch(error => {
-      console.error("Erro ao carregar triagens:", error);
-      alert("Erro ao carregar os pacientes.");
     });
 }
 
@@ -106,9 +98,6 @@ function carregarMedicacoes() {
         option.textContent = med;
         select.appendChild(option);
       });
-    })
-    .catch(error => {
-      console.error("Erro ao carregar medicações:", error);
     });
 }
 
@@ -147,63 +136,8 @@ function salvar() {
     document.getElementById("diagnostico").value = "";
     document.getElementById("medicacao").value = "";
     document.getElementById("obs").value = "";
-  })
-  .catch(error => {
-    console.error("Erro ao salvar consulta:", error);
-    alert("Erro ao salvar consulta.");
   });
 }
-
-
-/* ============================
-   FUNÇÃO PARA DAR ALTA
-   ============================ */
-
-function darAlta(index) {
-  const t = triagensCarregadas[index];
-
-  if (!t) {
-    alert("Paciente não encontrado.");
-    return;
-  }
-
-  const confirmar = confirm(
-    "Deseja realmente dar alta para o paciente " + t.nome + "?"
-  );
-
-  if (!confirmar) {
-    return;
-  }
-
-  fetch("/alta", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      paciente: t.nome
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
-
-    alert(data.mensagem || "Paciente recebeu alta.");
-
-    // Limpa os campos da consulta
-    document.getElementById("paciente").value = "";
-    document.getElementById("diagnostico").value = "";
-    document.getElementById("medicacao").value = "";
-    document.getElementById("obs").value = "";
-
-    // Atualiza a lista de triagens
-    carregar();
-  })
-  .catch(error => {
-    console.error("Erro ao dar alta:", error);
-    alert("Erro ao dar alta do paciente.");
-  });
-}
-
 
 carregar();
 carregarMedicacoes();
@@ -211,4 +145,4 @@ carregarMedicacoes();
 </script>
 
 </body>
-</html>
+</html> preciso que adicione no meu codigo a opção de receber alta

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
+
 <head>
+  <meta charset="UTF-8">
+
+  <title>Painel Médico</title>
+
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -16,160 +21,281 @@
 
   <h3>Consulta</h3>
 
-  <input id="paciente" placeholder="Paciente" readonly>
+  <input
+    id="paciente"
+    placeholder="Paciente"
+    readonly
+  >
 
-  <input id="diagnostico" placeholder="Diagnóstico">
-
-  <select id="medicacao">
-    <option value="">Selecione a medicação</option>
-  </select>
-
-  <textarea id="obs" placeholder="Observações"></textarea>
-
-  <button onclick="salvar()">Salvar</button>
-
-</div><!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-
-<div class="container">
-
-  <h2>🩺 Painel Médico</h2>
-
-  <div id="triagens"></div>
-
-  <hr>
-
-  <h3>Consulta</h3>
-
-  <input id="paciente" placeholder="Paciente" readonly>
-
-  <input id="diagnostico" placeholder="Diagnóstico">
+  <input
+    id="diagnostico"
+    placeholder="Diagnóstico"
+  >
 
   <select id="medicacao">
-    <option value="">Selecione a medicação</option>
+
+    <option value="">
+      Selecione a medicação
+    </option>
+
   </select>
 
-  <textarea id="obs" placeholder="Observações"></textarea>
+  <textarea
+    id="obs"
+    placeholder="Observações"
+  ></textarea>
 
-  <button onclick="salvar()">Salvar</button>
+  <button
+    type="button"
+    onclick="salvar()"
+  >
+    Salvar Consulta
+  </button>
 
 </div>
+
 
 <script>
 
 let triagensCarregadas = [];
 
+
+// =====================================================
+// CARREGAR PACIENTES
+// =====================================================
+
 function carregar() {
+
   fetch("/triagens")
-    .then(r => r.json())
+
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error("Erro ao buscar triagens.");
+      }
+
+      return response.json();
+
+    })
+
     .then(data => {
 
       triagensCarregadas = data;
 
-      const div = document.getElementById("triagens");
+      const div =
+        document.getElementById("triagens");
 
       div.innerHTML = "";
 
+
+      // Nenhum paciente
+      if (data.length === 0) {
+
+        div.innerHTML = `
+          <p>
+            Nenhum paciente aguardando atendimento.
+          </p>
+        `;
+
+        return;
+      }
+
+
+      // Criar cards
       data.forEach((t, index) => {
 
         div.innerHTML += `
+
           <div class="card">
 
-            <h3>${t.nome}</h3>
+            <h3>
+              ${t.nome || "Paciente"}
+            </h3>
+
 
             <p>
               <b>Sintoma:</b>
               ${t.sintoma || t.sintomas || "Não informado"}
             </p>
 
+
             <p>
               <b>Temperatura:</b>
               ${t.temperatura || t.temp || "Não informada"}°C
             </p>
 
+
             <p>
-              <span class="${t.risco}">
-                ${t.risco}
+
+              <b>Risco:</b>
+
+              <span class="${t.risco || ""}">
+                ${t.risco || "Não informado"}
               </span>
+
             </p>
+
 
             <p>
               <b>Alergia:</b>
               ${t.alergia || "Nenhuma"}
             </p>
 
+
             <p>
               <b>Observação:</b>
               ${t.observacao || "Nenhuma"}
             </p>
 
-            <button type="button" onclick="selecionar(${index})">
-              Atender
-            </button>
 
-            <button type="button" onclick="darAlta(${index})">
-              Dar alta
-            </button>
+            <div class="botoes">
+
+              <button
+                type="button"
+                onclick="selecionar(${index})"
+              >
+                🩺 Atender
+              </button>
+
+
+              <button
+                type="button"
+                onclick="darAlta(${index})"
+              >
+                ✅ Dar Alta
+              </button>
+
+            </div>
 
           </div>
+
         `;
+
       });
+
     })
+
     .catch(error => {
-      console.error("Erro ao carregar triagens:", error);
-      alert("Erro ao carregar os pacientes.");
+
+      console.error(
+        "Erro ao carregar triagens:",
+        error
+      );
+
+      alert(
+        "❌ Erro ao carregar os pacientes."
+      );
+
     });
+
 }
 
+
+
+// =====================================================
+// SELECIONAR PACIENTE
+// =====================================================
 
 function selecionar(index) {
 
-  const t = triagensCarregadas[index];
+  const t =
+    triagensCarregadas[index];
+
 
   if (!t) {
-    alert("Paciente não encontrado.");
+
+    alert(
+      "Paciente não encontrado."
+    );
+
     return;
   }
 
-  // Coloca o nome do paciente na consulta
-  document.getElementById("paciente").value = t.nome || "";
 
-  // Coloca a observação da triagem na consulta
-  document.getElementById("obs").value =
-    t.observacao || "";
+  // Nome
+  document.getElementById(
+    "paciente"
+  ).value = t.nome || "";
 
-  // Mostra alerta se o paciente tiver alergia
-  if (t.alergia && t.alergia !== "Nenhuma") {
-    alert("⚠️ Paciente possui alergia: " + t.alergia);
+
+  // Observação da triagem
+  document.getElementById(
+    "obs"
+  ).value = t.observacao || "";
+
+
+  // Alerta de alergia
+  if (
+    t.alergia &&
+    t.alergia !== "Nenhuma"
+  ) {
+
+    alert(
+      "⚠️ Paciente possui alergia: " +
+      t.alergia
+    );
+
   }
 
-  // Depois de clicar em OK, vai para a área de consulta
-  document.getElementById("paciente").scrollIntoView({
+
+  // Ir para consulta
+  document.getElementById(
+    "paciente"
+  ).scrollIntoView({
     behavior: "smooth",
     block: "center"
   });
+
 }
 
 
+
+// =====================================================
+// DAR ALTA + GERAR PDF
+// =====================================================
+
 function darAlta(index) {
 
-  const t = triagensCarregadas[index];
+  const t =
+    triagensCarregadas[index];
+
 
   if (!t) {
-    alert("Paciente não encontrado.");
+
+    alert(
+      "Paciente não encontrado."
+    );
+
     return;
   }
 
-  if (!confirm("Deseja dar alta para " + t.nome + "?")) {
+
+  const confirmar = confirm(
+    "Deseja realmente dar alta para " +
+    t.nome +
+    "?\n\n" +
+    "Um formulário de alta será gerado em PDF."
+  );
+
+
+  if (!confirmar) {
     return;
   }
+
+
+  // Desabilita o botão durante o processo
+  const botoes =
+    document.querySelectorAll(
+      ".card button"
+    );
+
+  botoes.forEach(botao => {
+    botao.disabled = true;
+  });
+
 
   fetch("/alta", {
+
     method: "POST",
 
     headers: {
@@ -177,62 +303,209 @@ function darAlta(index) {
     },
 
     body: JSON.stringify({
-      paciente: t.nome
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
 
-    if (data.erro) {
-      alert("❌ " + data.erro);
-      return;
+      paciente: t.nome
+
+    })
+
+  })
+
+
+  .then(async response => {
+
+    // Se o backend retornar erro
+    if (!response.ok) {
+
+      let mensagem =
+        "Erro ao dar alta.";
+
+      try {
+
+        const erro =
+          await response.json();
+
+        mensagem =
+          erro.erro || mensagem;
+
+      } catch (e) {}
+
+      throw new Error(
+        mensagem
+      );
     }
 
-    alert("✅ Paciente recebeu alta!");
 
-    document.getElementById("paciente").value = "";
-    document.getElementById("diagnostico").value = "";
-    document.getElementById("medicacao").value = "";
-    document.getElementById("obs").value = "";
-
-    carregar();
+    // O backend retorna o PDF
+    return response.blob();
 
   })
+
+
+  .then(blob => {
+
+    // Cria URL temporária do PDF
+    const url =
+      window.URL.createObjectURL(blob);
+
+
+    // Cria link para download
+    const link =
+      document.createElement("a");
+
+
+    link.href = url;
+
+
+    // Nome do arquivo
+    link.download =
+      "Formulario_Alta_" +
+      t.nome
+        .replace(/[^a-zA-Z0-9À-ÿ ]/g, "")
+        .replace(/\s+/g, "_") +
+      ".pdf";
+
+
+    document.body.appendChild(link);
+
+
+    // Inicia download
+    link.click();
+
+
+    // Remove link
+    link.remove();
+
+
+    // Libera memória
+    window.URL.revokeObjectURL(url);
+
+
+    // Limpar formulário
+    limparConsulta();
+
+
+    // Atualizar lista
+    carregar();
+
+
+    alert(
+      "✅ Alta realizada com sucesso!\n\n" +
+      "O formulário de alta foi gerado em PDF."
+    );
+
+  })
+
+
   .catch(error => {
 
-    console.error("Erro ao dar alta:", error);
+    console.error(
+      "Erro ao dar alta:",
+      error
+    );
 
-    alert("❌ Erro ao dar alta.");
+
+    alert(
+      "❌ " + error.message
+    );
+
+  })
+
+
+  .finally(() => {
+
+    // Reativar botões
+    botoes.forEach(botao => {
+      botao.disabled = false;
+    });
 
   });
+
 }
 
+
+
+// =====================================================
+// LIMPAR CONSULTA
+// =====================================================
+
+function limparConsulta() {
+
+  document.getElementById(
+    "paciente"
+  ).value = "";
+
+
+  document.getElementById(
+    "diagnostico"
+  ).value = "";
+
+
+  document.getElementById(
+    "medicacao"
+  ).value = "";
+
+
+  document.getElementById(
+    "obs"
+  ).value = "";
+
+}
+
+
+
+// =====================================================
+// CARREGAR MEDICAÇÕES
+// =====================================================
 
 function carregarMedicacoes() {
 
   fetch("/lista-medicacoes")
 
-    .then(r => r.json())
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error(
+          "Erro ao carregar medicações."
+        );
+      }
+
+      return response.json();
+
+    })
 
     .then(data => {
 
       const select =
-        document.getElementById("medicacao");
+        document.getElementById(
+          "medicacao"
+        );
+
 
       select.innerHTML = `
-        <option value="">Selecione a medicação</option>
+
+        <option value="">
+          Selecione a medicação
+        </option>
+
       `;
+
 
       data.forEach(med => {
 
         const option =
-          document.createElement("option");
+          document.createElement(
+            "option"
+          );
+
 
         option.value = med;
 
         option.textContent = med;
 
-        select.appendChild(option);
+
+        select.appendChild(
+          option
+        );
 
       });
 
@@ -246,24 +519,43 @@ function carregarMedicacoes() {
       );
 
     });
+
 }
 
+
+
+// =====================================================
+// SALVAR CONSULTA
+// =====================================================
 
 function salvar() {
 
   const paciente =
-    document.getElementById("paciente").value;
+    document.getElementById(
+      "paciente"
+    ).value;
+
 
   const diagnostico =
-    document.getElementById("diagnostico").value;
+    document.getElementById(
+      "diagnostico"
+    ).value;
+
 
   const medicacao =
-    document.getElementById("medicacao").value;
+    document.getElementById(
+      "medicacao"
+    ).value;
+
 
   const obs =
-    document.getElementById("obs").value;
+    document.getElementById(
+      "obs"
+    ).value;
 
 
+
+  // Validar paciente
   if (!paciente) {
 
     alert(
@@ -271,10 +563,10 @@ function salvar() {
     );
 
     return;
-
   }
 
 
+  // Validar medicação
   if (!medicacao) {
 
     alert(
@@ -282,7 +574,6 @@ function salvar() {
     );
 
     return;
-
   }
 
 
@@ -291,7 +582,10 @@ function salvar() {
     method: "POST",
 
     headers: {
-      "Content-Type": "application/json"
+
+      "Content-Type":
+        "application/json"
+
     },
 
     body: JSON.stringify({
@@ -305,25 +599,56 @@ function salvar() {
 
   })
 
-  .then(r => r.json())
+
+  .then(async response => {
+
+    if (!response.ok) {
+
+      let erro =
+        "Erro ao salvar consulta.";
+
+      try {
+
+        const data =
+          await response.json();
+
+        erro =
+          data.erro || erro;
+
+      } catch (e) {}
+
+      throw new Error(erro);
+    }
+
+
+    return response.json();
+
+  })
+
 
   .then(() => {
 
-    alert("Consulta salva");
+    alert(
+      "✅ Consulta salva com sucesso!"
+    );
 
+
+    // Limpa somente os dados da consulta
     document.getElementById(
       "diagnostico"
     ).value = "";
+
 
     document.getElementById(
       "medicacao"
     ).value = "";
 
-    document.getElementById(
-      "obs"
-    ).value = "";
+
+    // Mantém o paciente selecionado
+    // e mantém a observação da triagem
 
   })
+
 
   .catch(error => {
 
@@ -332,12 +657,20 @@ function salvar() {
       error
     );
 
-    alert("Erro ao salvar consulta.");
+
+    alert(
+      "❌ " + error.message
+    );
 
   });
 
 }
 
+
+
+// =====================================================
+// INICIAR SISTEMA
+// =====================================================
 
 carregar();
 
@@ -346,122 +679,5 @@ carregarMedicacoes();
 </script>
 
 </body>
+
 </html>
-
-
-<script>
-
-let triagensCarregadas = [];
-
-function carregar() {
-  fetch("/triagens")
-    .then(r => r.json())
-    .then(data => {
-      triagensCarregadas = data;
-
-      const div = document.getElementById("triagens");
-      div.innerHTML = "";
-
-      data.forEach((t, index) => {
-        div.innerHTML += `
-          <div class="card">
-            <h3>${t.nome}</h3>
-
-            <p><b>Sintoma:</b> ${t.sintoma || "Não informado"}</p>
-
-            <p><b>Temperatura:</b> ${t.temperatura || "Não informada"}°C</p>
-
-            <p>
-              <span class="${t.risco}">
-                ${t.risco}
-              </span>
-            </p>
-
-            <p><b>Alergia:</b> ${t.alergia || "Nenhuma"}</p>
-
-            <p><b>Observação:</b> ${t.observacao || "Nenhuma"}</p>
-
-            <button onclick="selecionar(${index})">
-              Atender
-            </button>
-          </div>
-        `;
-      });
-    });
-}
-
-function selecionar(index) {
-  const t = triagensCarregadas[index];
-
-  document.getElementById("paciente").value = t.nome;
-  document.getElementById("obs").value = t.observacao || "";
-
-  if (t.alergia && t.alergia !== "Nenhuma") {
-    alert("⚠️ Paciente possui alergia: " + t.alergia);
-  }
-}
-
-function carregarMedicacoes() {
-  fetch("/lista-medicacoes")
-    .then(r => r.json())
-    .then(data => {
-      const select = document.getElementById("medicacao");
-
-      select.innerHTML = `
-        <option value="">Selecione a medicação</option>
-      `;
-
-      data.forEach(med => {
-        const option = document.createElement("option");
-        option.value = med;
-        option.textContent = med;
-        select.appendChild(option);
-      });
-    });
-}
-
-function salvar() {
-  const paciente = document.getElementById("paciente").value;
-  const diagnostico = document.getElementById("diagnostico").value;
-  const medicacao = document.getElementById("medicacao").value;
-  const obs = document.getElementById("obs").value;
-
-  if (!paciente) {
-    alert("Selecione um paciente clicando em Atender.");
-    return;
-  }
-
-  if (!medicacao) {
-    alert("Selecione uma medicação.");
-    return;
-  }
-
-  fetch("/consulta", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      paciente,
-      diagnostico,
-      medicacao,
-      obs
-    })
-  })
-  .then(r => r.json())
-  .then(() => {
-    alert("Consulta salva");
-
-    document.getElementById("diagnostico").value = "";
-    document.getElementById("medicacao").value = "";
-    document.getElementById("obs").value = "";
-  });
-}
-
-carregar();
-carregarMedicacoes();
-
-</script>
-
-</body>
-</html> preciso que adicione no meu codigo a opção de receber alta
